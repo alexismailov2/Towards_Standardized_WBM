@@ -8,7 +8,7 @@
 #include <bayesopt/bayesopt.h>
 #include <bayesopt/bayesopt.hpp>
 #include <numpy/arrayobject.h>
-#include "simulation_helpers.h"
+#include "simulation_helpers.hpp"
 
 // ------------------------------------- DEFINING GLOBAL PARAMETERS -------------------------------------
 //wilson
