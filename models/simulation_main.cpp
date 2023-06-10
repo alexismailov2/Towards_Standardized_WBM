@@ -756,10 +756,11 @@ static PyObject* wilson_model(PyObject* self, PyObject *args)
 }
 
 // Wilson Model, gets the *electrical activity* equations
-static PyObject* wilson_model_BO(PyObject* self, PyObject *args)
+static int wilson_model_BO(PyObject* self, PyObject *args)
 {
     /*
-    This function actually solves the Wilson-Cowan model equations, and returns the result as a numpy array.
+    This function takes in the parameters of the WC model from Python, unpacks them to C++ objects,
+    then sends them to the objective function, which then does the actual computation.
     
     Parameters
     ----------
@@ -975,6 +976,90 @@ static PyObject* wilson_model_BO(PyObject* self, PyObject *args)
         printf("-- Finished oscillator %d --\n", i);
     }
 
+    // ------------ Send data to objective function
+    printf("---- Send data to objective function ----\n");
+    wilson_objective(2, )
+
+    return 1;
+}
+
+
+// Define the objective function for the Wilson model
+double wilson_objective(unsigned int input_dim, const double *initial_query, double* gradient, void *func_data)
+{
+    /*
+    This is the goal or objective function that will be used by Bayesian Optimization to find the optimal parameters for the Wilson model.
+
+    Parameters
+    ----------
+    input_dim : unsigned int, number of parameters
+    initial_query : array, initial parameter values
+    gradient : array, gradient of the objective function
+    func_data : void, additional data for the objective function (which I think means data for the wilson model)
+    
+    Returns
+    -------
+    objective_value : double, value of the objective function
+    */
+
+    // ------------- Declare input variables
+    int *number_of_oscillators = new int;
+    PyObject *coupling_strength;
+    PyObject *delay;
+    double *c_ee = new double;
+    double *c_ei = new double;
+    double *c_ie = new double;
+    double *c_ii = new double;
+    double *tau_e = new double;
+    double *tau_i = new double;
+    double *r_e = new double;
+    double *r_i = new double;
+    double *alpha_e = new double;
+    double *alpha_i = new double;
+    double *theta_e = new double;
+    double *theta_i = new double;
+    double *external_e = new double;
+    double *external_i = new double;
+    int *number_of_integration_steps = new int;
+    double *integration_step_size = new double;
+    PyObject *lower_idxs;
+    PyObject *upper_idxs;
+    PyObject *initial_cond_e;
+    PyObject *initial_cond_i;
+    int *noise_type = new int;
+    double *noise_amplitude = new double;
+
+    // ------------- Declare helper variables
+    printf("---- Declare helper variables ----\n");
+    double *e_values = NULL;
+    double *i_values = NULL;
+    double *coupling_mat = NULL;
+    double *delay_mat = NULL;
+    int *lower_idxs_mat = NULL;
+    int *upper_idxs_mat = NULL;
+    double *output_e = NULL;
+    PyObject *temp_variable;
+    long *temp_long = new long;
+    double *node_input = new double;
+    double *delay_difference = new double;
+    int *index_lower = new int;
+    int *index_upper = new int;
+    double *input_lower = new double;
+    double *input_upper = new double;
+    double *input_final = new double;
+    double *differential_E = NULL;
+    double *differential_I = NULL;
+    double *differential_E2 = NULL;
+    double *differential_I2 = NULL;
+    double *activity_E = NULL;
+    double *activity_I = NULL;
+    double *noises_array = NULL;
+
+    // ------------- Declare output variables
+    printf("---- Declare output variables ----\n");
+    npy_intp dimensions[2];
+    PyObject *electrical_activity;
+    
     // ------------ Random generation
     std::default_random_engine generator(1);
 
@@ -1181,56 +1266,6 @@ static PyObject* wilson_model_BO(PyObject* self, PyObject *args)
     // ------------- Return output variables
     printf("---- Shape of electrical activity: %d ----\n", PyArray_NDIM(electrical_activity));
     return electrical_activity;
-}
-
-
-// Define the objective function for the Wilson model
-double wilson_objective(unsigned int input_dim, const double *initial_query, double* gradient, void *func_data)
-{
-    /*
-    This is the goal or objective function that will be used by Bayesian Optimization to find the optimal parameters for the Wilson model.
-
-    Parameters
-    ----------
-    input_dim : unsigned int, number of parameters
-    initial_query : array, initial parameter values
-    gradient : array, gradient of the objective function
-    func_data : void, additional data for the objective function (which I think means data for the wilson model)
-    
-    Returns
-    -------
-    objective_value : double, value of the objective function
-    */
-
-    // ------------- Declare input variables
-    int *number_of_oscillators = new int;
-    PyObject *coupling_strength;
-    PyObject *delay;
-    double *c_ee = new double;
-    double *c_ei = new double;
-    double *c_ie = new double;
-    double *c_ii = new double;
-    double *tau_e = new double;
-    double *tau_i = new double;
-    double *r_e = new double;
-    double *r_i = new double;
-    double *alpha_e = new double;
-    double *alpha_i = new double;
-    double *theta_e = new double;
-    double *theta_i = new double;
-    double *external_e = new double;
-    double *external_i = new double;
-    int *number_of_integration_steps = new int;
-    double *integration_step_size = new double;
-    PyObject *lower_idxs;
-    PyObject *upper_idxs;
-    PyObject *initial_cond_e;
-    PyObject *initial_cond_i;
-    int *noise_type = new int;
-    double *noise_amplitude = new double;
-
-
-
 
 }
 
