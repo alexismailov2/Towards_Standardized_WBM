@@ -215,17 +215,34 @@ def wilson_electrical_sim(args):
     empFC_simFC_corr = determine_similarity(FC, sim_FC)
 
     # --------- Save the results
-    # Define main folder path
+    # Define folder path for all simulations
     folder_name = "wilson_Coupling{:.4f}Delay{:.4f}\\".format(coupling_strength, delay)
-    # Create folder if it doesn't exist
-    if not os.path.exists(folder_name):
-        os.mkdir(folder_name)
-    # Define paths
-    electric_path = os.path.join(write_path, os.path.join(folder_name, "electrical.csv"))
-    bold_path = os.path.join(write_path, os.path.join(folder_name, "bold.csv"))
-    FC_path = os.path.join(write_path, os.path.join(folder_name, "simFC.csv"))
-    R_path = os.path.join(write_path, os.path.join(folder_name, "R.txt"))
-    empFC_simFC_corr_path = os.path.join(write_path, os.path.join(folder_name, "empFC_simFC_corr.txt"))
+    # Define main paths for each thing
+    electric_path_main = os.path.join(write_path, folder_name)
+    bold_path_main = os.path.join(write_path, folder_name)
+    FC_path_main = os.path.join(write_path, folder_name)
+    R_path_main = os.path.join(write_path, folder_name)
+    empFC_simFC_corr_path_main = os.path.join(write_path, folder_name)
+    # Make paths if they don't exist
+    if not os.path.exists(electric_path_main):
+        os.makedirs(electric_path_main)
+    if not os.path.exists(bold_path_main):
+        os.makedirs(bold_path_main)
+    if not os.path.exists(FC_path_main):
+        os.makedirs(FC_path_main)
+    if not os.path.exists(R_path_main):
+        os.makedirs(R_path_main)
+    if not os.path.exists(empFC_simFC_corr_path_main):
+        os.makedirs(empFC_simFC_corr_path_main)
+    # Define paths for this simulation
+    electric_path = os.path.join(electric_path_main, "electric.csv")
+    bold_path = os.path.join(bold_path_main, "bold.csv")
+    FC_path = os.path.join(FC_path_main, "FC.csv")
+    R_path = os.path.join(R_path_main, "R.csv")
+    empFC_simFC_corr_path = os.path.join(empFC_simFC_corr_path_main, "empFC_simFC_corr.csv")
+
+    print('paths are', electric_path, bold_path, FC_path, R_path, empFC_simFC_corr_path)
+
     # Downsample BOLD
     sim_bold = sim_bold[:, downsampling_rate - 1 :: downsampling_rate]
     # Save the results

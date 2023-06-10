@@ -1,14 +1,56 @@
 #define PY_SSIZE_T_CLEAN
 #include <math.h>
-#include <Python.h>
-#include <numpy/arrayobject.h>
 #include <random>
 #include <string>
-#include "bayesopt/include/bayesopt/bayesopt.h"
-#include "bayesopt/include/bayesopt/bayesopt.hpp"
+#include <list>
+#include <Python.h>
+#include <boost/any.hpp>
+#include <bayesopt/bayesopt.h>
+#include <bayesopt/bayesopt.hpp>
+#include <numpy/arrayobject.h>
+#include "simulation_helpers.h"
 
+// ------------------------------------- DEFINING GLOBAL PARAMETERS -------------------------------------
+//wilson
+int *wilson_number_of_oscillators = new int;                   
+double *wilson_c_ee = new double;                      
+double *wilson_c_ei = new double;
+double *wilson_c_ie = new double;
+double *wilson_c_ii = new double;
+double *wilson_tau_e = new double;
+double *wilson_tau_i = new double;
+double *wilson_r_e = new double;
+double *wilson_r_i = new double;
+double *wilson_alpha_e = new double;
+double *wilson_alpha_i = new double;
+double *wilson_theta_e = new double;
+double *wilson_theta_i = new double;
+double *wilson_external_e = new double;
+double *wilson_external_i = new double;
+int *wilson_number_of_integration_steps = new int;
+double *wilson_integration_step_size = new double;
+int *wilson_noise_type = new int;
+double *wilson_noise_amplitude = new double;
+double *wilson_e_values = NULL;
+double *wilson_i_values = NULL;
+double *wilson_coupling_mat = NULL;
+double *wilson_delay_mat = NULL;
+int *wilson_lower_idxs_mat = NULL;
+int *wilson_upper_idxs_mat = NULL;
+double *wilson_output_e = NULL;
+PyObject *wilson_electrical_activity;
+
+
+// Defining random distributions
 std::normal_distribution<double> rand_std_normal (0, 1);
 std::uniform_real_distribution<double> rand_std_uniform (0, 1);
+
+// Function declarations
+static PyObject *electrical_to_bold(PyObject *self, PyObject *args);
+double wilson_response_function(double x, double alpha, double theta);
+static PyObject *wilson_model(PyObject *self, PyObject *args);
+static PyObject *parsing_wilson_inputs(PyObject *self, PyObject *args);
+double wilson_objective(unsigned int input_dim, const double *initial_query, double* gradient, void *func_data);
 
 // Function that converts from electrical to BOLD signals
 static PyObject *electrical_to_bold(PyObject *self, PyObject *args)
@@ -756,7 +798,7 @@ static PyObject* wilson_model(PyObject* self, PyObject *args)
 }
 
 // Wilson Model, gets the *electrical activity* equations
-static int wilson_model_BO(PyObject* self, PyObject *args)
+static PyObject* parsing_wilson_inputs(PyObject* self, PyObject *args)
 {
     /*
     This function takes in the parameters of the WC model from Python, unpacks them to C++ objects,
@@ -805,46 +847,17 @@ static int wilson_model_BO(PyObject* self, PyObject *args)
         S_i = 1 / (1 + exp(-alpha_i * (x - theta_i)))
     */
 
-    // ------------- Declare input variables
+    // ------------- Declare input variables - not arrays
     printf("----------------- In CPP file for Wilson Function -----------------\n");
-    int *number_of_oscillators = new int;
-    printf("---- Declare input variables ----\n");
+    // ------------- Declare input variables - arrays
     PyObject *coupling_strength;
     PyObject *delay;
-    printf("---- Declare input variables 2 ----\n");                    
-    double *c_ee = new double;                      
-    double *c_ei = new double;
-    double *c_ie = new double;
-    double *c_ii = new double;
-    double *tau_e = new double;
-    double *tau_i = new double;
-    double *r_e = new double;
-    double *r_i = new double;
-    double *alpha_e = new double;
-    double *alpha_i = new double;
-    double *theta_e = new double;
-    double *theta_i = new double;
-    double *external_e = new double;
-    double *external_i = new double;
-    int *number_of_integration_steps = new int;
-    double *integration_step_size = new double;
     PyObject *lower_idxs;
     PyObject *upper_idxs;
     PyObject *initial_cond_e;
     PyObject *initial_cond_i;
-    int *noise_type = new int;
-    double *noise_amplitude = new double;
 
     // ------------- Declare helper variables
-    printf("---- Declare helper variables ----\n");
-    double *e_values = NULL;
-    double *i_values = NULL;
-    double *coupling_mat = NULL;
-    double *delay_mat = NULL;
-    int *lower_idxs_mat = NULL;
-    int *upper_idxs_mat = NULL;
-    double *output_e = NULL;
-    PyObject *temp_variable;
     long *temp_long = new long;
     double *node_input = new double;
     double *delay_difference = new double;
@@ -860,11 +873,10 @@ static int wilson_model_BO(PyObject* self, PyObject *args)
     double *activity_E = NULL;
     double *activity_I = NULL;
     double *noises_array = NULL;
+    PyObject *temp_variable;
 
     // ------------- Declare output variables
-    printf("---- Declare output variables ----\n");
     npy_intp dimensions[2];
-    PyObject *electrical_activity;
 
     // ------------- Parse input variables
     printf("---- Parsing input variables ----\n");
@@ -872,15 +884,16 @@ static int wilson_model_BO(PyObject* self, PyObject *args)
         !PyArg_ParseTuple(
             args, "OOiddddddddddddddidOOOOid",
             &coupling_strength, &delay, 
-            number_of_oscillators, c_ee, c_ei, 
-            c_ie, c_ii, tau_e, tau_i, r_e, r_i, 
-            alpha_e, alpha_i, theta_e, theta_i, 
-            external_e, external_i, 
-            number_of_integration_steps, 
-            integration_step_size,
+            ::wilson_number_of_oscillators, ::wilson_c_ee, 
+            ::wilson_c_ei, ::wilson_c_ie, ::wilson_c_ii, 
+            ::wilson_tau_e, ::wilson_tau_i, ::wilson_r_e, 
+            ::wilson_r_i, ::wilson_alpha_e, ::wilson_alpha_i, 
+            ::wilson_theta_e, ::wilson_theta_i, ::wilson_external_e, 
+            ::wilson_external_i, ::wilson_number_of_integration_steps, 
+            ::wilson_integration_step_size,
             &lower_idxs, &upper_idxs, 
             &initial_cond_e, &initial_cond_i,
-            noise_type, noise_amplitude
+            ::wilson_noise_type, ::wilson_noise_amplitude
         )
     )
     {
@@ -888,101 +901,138 @@ static int wilson_model_BO(PyObject* self, PyObject *args)
         return NULL;
     };
 
-    e_values = new double[*number_of_oscillators];
-    i_values = new double[*number_of_oscillators];
-    coupling_mat = new double[*number_of_oscillators * *number_of_oscillators];
-    delay_mat = new double[*number_of_oscillators * *number_of_oscillators];
-    lower_idxs_mat = new int[*number_of_oscillators * *number_of_oscillators];
-    upper_idxs_mat = new int[*number_of_oscillators * *number_of_oscillators];
-    differential_E = new double[*number_of_oscillators];
-    differential_I = new double[*number_of_oscillators];
-    differential_E2 = new double[*number_of_oscillators];
-    differential_I2 = new double[*number_of_oscillators];
-    activity_E = new double[*number_of_oscillators];
-    activity_I = new double[*number_of_oscillators];
-    noises_array = new double[*number_of_oscillators];
+    // ------------- Allocate memory
+    // Allocate memory for input and helper variables
+    ::wilson_e_values = new double[*::wilson_number_of_oscillators];
+    ::wilson_i_values = new double[*::wilson_number_of_oscillators];
+    ::wilson_coupling_mat = new double[*::wilson_number_of_oscillators * *::wilson_number_of_oscillators];
+    ::wilson_delay_mat = new double[*::wilson_number_of_oscillators * *::wilson_number_of_oscillators];
+    ::wilson_lower_idxs_mat = new int[*::wilson_number_of_oscillators * *::wilson_number_of_oscillators];
+    ::wilson_upper_idxs_mat = new int[*::wilson_number_of_oscillators * *::wilson_number_of_oscillators];
 
-    dimensions[0] = *number_of_oscillators;
-    dimensions[1] = *number_of_integration_steps + 1;
-    output_e = new double[*number_of_oscillators * (*number_of_integration_steps + 1)];
-    electrical_activity = PyArray_EMPTY(2, dimensions, NPY_FLOAT64, 0);
-
-    printf("Inputs are:\n");
-    printf("Number of oscillators: %d\n", *number_of_oscillators);
-    printf("Number of integration steps: %d\n", *number_of_integration_steps);
-    printf("Integration step size: %f\n", *integration_step_size);
-    printf("Noise type: %d\n", *noise_type);
-    printf("Noise amplitude: %f\n", *noise_amplitude);
+    // Allocate memory for output variables
+    dimensions[0] = *::wilson_number_of_oscillators;
+    dimensions[1] = *::wilson_number_of_integration_steps + 1;
+    ::wilson_output_e = new double[*::wilson_number_of_oscillators * (*::wilson_number_of_integration_steps + 1)];
+    ::wilson_electrical_activity = PyArray_EMPTY(2, dimensions, NPY_FLOAT64, 0);
 
     // ------------- Convert input variables to C++ types
     printf("---- Converting input variables to C++ types ----\n");
-    for (int i = 0; i < *number_of_oscillators; i++)
+    for (int i = 0; i < *::wilson_number_of_oscillators; i++)
     {   
-        printf("-- Oscillator %d --\n", i);
-        printf("Excitatory\n");
         // Get the initial conditions - EXCITATORY
         temp_variable = PyArray_GETITEM(initial_cond_e, PyArray_GETPTR1(initial_cond_e, i));
-        e_values[i] = PyFloat_AsDouble(temp_variable);
+        ::wilson_e_values[i] = PyFloat_AsDouble(temp_variable);
         // Decrease reference for next
         Py_DECREF(temp_variable);
 
-        printf("Inhibitory\n");
         // Get the initial conditions - INHIBITORY
         temp_variable = PyArray_GETITEM(initial_cond_i, PyArray_GETPTR1(initial_cond_i, i));
-        i_values[i] = PyFloat_AsDouble(temp_variable);
+        ::wilson_i_values[i] = PyFloat_AsDouble(temp_variable);
         // Decrease reference for next
         Py_DECREF(temp_variable);
 
         // ------------ Matrices
-        printf("Matrices\n");
-        for (int j = 0; j < *number_of_oscillators; j++)
+        for (int j = 0; j < *::wilson_number_of_oscillators; j++)
         {   
             // Get the coupling strength matrix
             temp_variable = PyArray_GETITEM(coupling_strength, PyArray_GETPTR2(coupling_strength, i, j));
-            coupling_mat[i * *number_of_oscillators + j] = PyFloat_AsDouble(temp_variable);
+            ::wilson_coupling_mat[i * *::wilson_number_of_oscillators + j] = PyFloat_AsDouble(temp_variable);
             // Decrease reference for next
             Py_DECREF(temp_variable);
 
             // Get the delay matrix
             temp_variable = PyArray_GETITEM(delay, PyArray_GETPTR2(delay, i, j));
-            delay_mat[i * *number_of_oscillators + j] = PyFloat_AsDouble(temp_variable);
+            ::wilson_delay_mat[i * *::wilson_number_of_oscillators + j] = PyFloat_AsDouble(temp_variable);
             // Decrease reference for next
             Py_DECREF(temp_variable);
 
             // Get the lower_idxs matrix
             temp_variable = PyArray_GETITEM(lower_idxs, PyArray_GETPTR2(lower_idxs, i, j));
             *temp_long = PyLong_AsLong(temp_variable);
-            lower_idxs_mat[i * *number_of_oscillators + j] = (int)*temp_long;
+            ::wilson_lower_idxs_mat[i * *::wilson_number_of_oscillators + j] = (int)*temp_long;
             // Decrease reference for next
             Py_DECREF(temp_variable);
 
             // Get the upper_idxs matrix
             temp_variable = PyArray_GETITEM(upper_idxs, PyArray_GETPTR2(upper_idxs, i, j));
             *temp_long = PyLong_AsLong(temp_variable);
-            upper_idxs_mat[i * *number_of_oscillators + j] = (int)*temp_long;
+            ::wilson_upper_idxs_mat[i * *::wilson_number_of_oscillators + j] = (int)*temp_long;
             // Decrease reference for next
             Py_DECREF(temp_variable);
         }
 
-        printf("-- Output matrix --\n");
         // ------------ Initialize output matrix
-        output_e[i * (*number_of_integration_steps + 1)] = e_values[i];
+        ::wilson_output_e[i * (*::wilson_number_of_integration_steps + 1)] = ::wilson_e_values[i];
         // Other values in matrix are NaN
-        printf("Number of integration steps: %d\n", *number_of_integration_steps);
-        for (int step = 1; step <= *number_of_integration_steps; step++)
+        for (int step = 1; step <= *::wilson_number_of_integration_steps; step++)
         {
-            output_e[i * (*number_of_integration_steps + 1) + step] = nan("");
+            ::wilson_output_e[i * (*::wilson_number_of_integration_steps + 1) + step] = nan("");
         }
-        printf("-- Finished oscillator %d --\n", i);
     }
 
     // ------------ Send data to objective function
     printf("---- Send data to objective function ----\n");
-    wilson_objective(2, )
 
-    return 1;
+    // Call the objective function
+    wilson_objective(2, NULL, NULL, NULL);
+
+    // ------------- Free memory
+    printf("---- Free memory ----\n");
+    // Delete input variables
+        // Delete global wilson variables
+    delete ::wilson_number_of_oscillators;
+    delete ::wilson_c_ee;
+    delete ::wilson_c_ei;
+    delete ::wilson_c_ie;
+    delete ::wilson_c_ii;
+    delete ::wilson_tau_e;
+    delete ::wilson_tau_i;
+    delete ::wilson_r_e;
+    delete ::wilson_r_i;
+    delete ::wilson_alpha_e;
+    delete ::wilson_alpha_i;
+    delete ::wilson_theta_e;
+    delete ::wilson_theta_i;
+    delete ::wilson_external_e;
+    delete ::wilson_external_i;
+    delete ::wilson_number_of_integration_steps;
+    delete ::wilson_integration_step_size;
+    delete ::wilson_noise_type;
+    delete ::wilson_noise_amplitude;
+
+    // Delete helper variables
+    delete[] ::wilson_e_values;
+    delete[] ::wilson_i_values;
+    delete[] ::wilson_coupling_mat;
+    delete[] ::wilson_delay_mat;
+    delete[] ::wilson_lower_idxs_mat;
+    delete[] ::wilson_upper_idxs_mat;
+    delete[] ::wilson_output_e;
+
+    // Delete single-value helper variables
+    delete temp_long;
+    delete node_input;
+    delete delay_difference;
+    delete index_lower;
+    delete index_upper;
+    delete input_lower;
+    delete input_upper;
+    delete input_final;
+
+    // Delete differential variables
+    delete[] differential_E;
+    delete[] differential_I;
+    delete[] differential_E2;
+    delete[] differential_I2;
+    delete[] activity_E;
+    delete[] activity_I;
+
+    // Delete noise array
+    delete[] noises_array;
+
+    return ::wilson_electrical_activity;
 }
-
 
 // Define the objective function for the Wilson model
 double wilson_objective(unsigned int input_dim, const double *initial_query, double* gradient, void *func_data)
@@ -1002,42 +1052,12 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
     objective_value : double, value of the objective function
     */
 
-    // ------------- Declare input variables
-    int *number_of_oscillators = new int;
-    PyObject *coupling_strength;
-    PyObject *delay;
-    double *c_ee = new double;
-    double *c_ei = new double;
-    double *c_ie = new double;
-    double *c_ii = new double;
-    double *tau_e = new double;
-    double *tau_i = new double;
-    double *r_e = new double;
-    double *r_i = new double;
-    double *alpha_e = new double;
-    double *alpha_i = new double;
-    double *theta_e = new double;
-    double *theta_i = new double;
-    double *external_e = new double;
-    double *external_i = new double;
-    int *number_of_integration_steps = new int;
-    double *integration_step_size = new double;
-    PyObject *lower_idxs;
-    PyObject *upper_idxs;
-    PyObject *initial_cond_e;
-    PyObject *initial_cond_i;
-    int *noise_type = new int;
-    double *noise_amplitude = new double;
+    // ------------- Check the shape and type of global input variable values
+    printf("---- Check global input variable values ----\n");
+    check_type((boost::any)::wilson_number_of_oscillators, "int * __ptr64", "wilson_number_of_oscillators");
 
-    // ------------- Declare helper variables
+    // ------------- Declare input variables - arrays
     printf("---- Declare helper variables ----\n");
-    double *e_values = NULL;
-    double *i_values = NULL;
-    double *coupling_mat = NULL;
-    double *delay_mat = NULL;
-    int *lower_idxs_mat = NULL;
-    int *upper_idxs_mat = NULL;
-    double *output_e = NULL;
     PyObject *temp_variable;
     long *temp_long = new long;
     double *node_input = new double;
@@ -1047,30 +1067,25 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
     double *input_lower = new double;
     double *input_upper = new double;
     double *input_final = new double;
-    double *differential_E = NULL;
-    double *differential_I = NULL;
-    double *differential_E2 = NULL;
-    double *differential_I2 = NULL;
-    double *activity_E = NULL;
-    double *activity_I = NULL;
-    double *noises_array = NULL;
+    double *differential_E = new double[*::wilson_number_of_oscillators];
+    double *differential_I = new double[*::wilson_number_of_oscillators];
+    double *differential_E2 = new double[*::wilson_number_of_oscillators];
+    double *differential_I2 = new double[*::wilson_number_of_oscillators];
+    double *activity_E = new double[*::wilson_number_of_oscillators];
+    double *activity_I = new double[*::wilson_number_of_oscillators];
+    double *noises_array = new double[*::wilson_number_of_oscillators];
 
-    // ------------- Declare output variables
-    printf("---- Declare output variables ----\n");
-    npy_intp dimensions[2];
-    PyObject *electrical_activity;
-    
     // ------------ Random generation
     std::default_random_engine generator(1);
 
     // ------------ TEMPORAL INTEGRATION
     printf("---- Temporal integration ----\n");
-    for (int step = 1; step <= *number_of_integration_steps; step++)
+    for (int step = 1; step <= *::wilson_number_of_integration_steps; step++)
     {
         printf("-- Temporal integration step %d --\n", step);
         // printf("-- Heun's Method - Step 1 --\n");
         // ------------ Heun's Method - Step 1
-        for (int node = 0; node < *number_of_oscillators; node++)
+        for (int node = 0; node < *::wilson_number_of_oscillators; node++)
         {   
             // printf("-- Heun's 1: Node %d --\n", node);
             // ------------ Initializations
@@ -1078,45 +1093,45 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
             *node_input = 0;
 
             // Initialize noise
-            if (*noise_type == 0)
+            if (*::wilson_noise_type == 0)
             {
                 noises_array[node] = 0;
             }
-            else if(*noise_type == 1)
+            else if(*::wilson_noise_type == 1)
             {
-                noises_array[node] = *noise_amplitude * (2 *rand_std_uniform(generator) - 1);
+                noises_array[node] = *::wilson_noise_amplitude * (2 *rand_std_uniform(generator) - 1);
             }
-            else if(*noise_type == 2)
+            else if(*::wilson_noise_type == 2)
             {
-                noises_array[node] = *noise_amplitude * rand_std_normal(generator);
+                noises_array[node] = *::wilson_noise_amplitude * rand_std_normal(generator);
             }
 
             // printf("-- Heun's 1: Node %d - Noise: %f --\n", node, noises_array[node]);
 
             // ------------ Calculate input to node
             // Consider all other nodes, but only if the lower delay index is lower than the time point
-            for (int other_node = 0; other_node < *number_of_oscillators; other_node++)
+            for (int other_node = 0; other_node < *::wilson_number_of_oscillators; other_node++)
             {   
                 // printf("-- Heun's 1: Node %d - Other node %d --\n", node, other_node);
-                if (step > lower_idxs_mat[node * *number_of_oscillators + other_node])
+                if (step > ::wilson_lower_idxs_mat[node * *::wilson_number_of_oscillators + other_node])
                 {
                     // Retrieve the difference between the 'true' delay and the one corresponding to the upper index
-                    *delay_difference = delay_mat[node * *number_of_oscillators + other_node];
-                    *delay_difference -= (double)upper_idxs_mat[node * *number_of_oscillators + other_node] * *integration_step_size;
+                    *delay_difference = ::wilson_delay_mat[node * *::wilson_number_of_oscillators + other_node];
+                    *delay_difference -= (double)::wilson_upper_idxs_mat[node * *::wilson_number_of_oscillators + other_node] * *::wilson_integration_step_size;
 
                     // Retrieve the time point indices corresponding with the lower and upper delay indices
-                    *index_lower = step - 1 - lower_idxs_mat[node * *number_of_oscillators + other_node];
-                    *index_upper = step - 1 - upper_idxs_mat[node * *number_of_oscillators + other_node];
+                    *index_lower = step - 1 - ::wilson_lower_idxs_mat[node * *::wilson_number_of_oscillators + other_node];
+                    *index_upper = step - 1 - ::wilson_upper_idxs_mat[node * *::wilson_number_of_oscillators + other_node];
 
                     // Retrieve the activities corresponding to the lower and upper delay indices
-                    *input_lower = output_e[other_node * (*number_of_integration_steps + 1) + *index_lower];
-                    *input_upper = output_e[other_node * (*number_of_integration_steps + 1) + *index_upper];
+                    *input_lower = ::wilson_output_e[other_node * (*::wilson_number_of_integration_steps + 1) + *index_lower];
+                    *input_upper = ::wilson_output_e[other_node * (*::wilson_number_of_integration_steps + 1) + *index_upper];
 
                     // From the previously retrieved values, estimate the input to oscillator k from oscillator j
                     *input_final = *input_upper;
-                    *input_final += (*input_lower - *input_upper) / *integration_step_size * *delay_difference;
+                    *input_final += (*input_lower - *input_upper) / *::wilson_integration_step_size * *delay_difference;
                     // From this estimation, determine the quantile, final input
-                    *input_final *= coupling_mat[node * *number_of_oscillators + other_node];
+                    *input_final *= ::wilson_coupling_mat[node * *::wilson_number_of_oscillators + other_node];
                     // Add this to the total input to oscillator k
                     *node_input += *input_final;
                 }
@@ -1125,24 +1140,24 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
             // printf("-- Heun's 1: Node %d - Differential Equations --\n", node);
             // ------------ Calculate Equations
             // Excitatory population (without noise and time) differentials
-            differential_E[node] = *node_input - *c_ei * i_values[node] - *external_e;
-            differential_E[node] = -e_values[node] + (1 - *r_e * e_values[node]) * wilson_response_function(differential_E[node], *alpha_e, *theta_e);
+            differential_E[node] = *node_input - *::wilson_c_ei * ::wilson_i_values[node] - *::wilson_external_e;
+            differential_E[node] = -::wilson_e_values[node] + (1 - *::wilson_r_e * ::wilson_e_values[node]) * wilson_response_function(differential_E[node], *::wilson_alpha_e, *::wilson_theta_e);
 
             // Inhibitory population (without noise and time) differentials
-            differential_I[node] = *c_ie * e_values[node];
-            differential_I[node] = -i_values[node] + (1 - *r_i * i_values[node]) * wilson_response_function(differential_I[node], *alpha_i, *theta_i);
+            differential_I[node] = *::wilson_c_ie * ::wilson_e_values[node];
+            differential_I[node] = -::wilson_i_values[node] + (1 - *::wilson_r_i * ::wilson_i_values[node]) * wilson_response_function(differential_I[node], *::wilson_alpha_i, *::wilson_theta_i);
             
             // First estimate of the new activity values
-            activity_E[node] = e_values[node] + (*integration_step_size * differential_E[node] + sqrt(*integration_step_size) * noises_array[node]) / *tau_e;
-            activity_I[node] = i_values[node] + (*integration_step_size * differential_I[node] + sqrt(*integration_step_size) * noises_array[node]) / *tau_i;
+            activity_E[node] = ::wilson_e_values[node] + (*::wilson_integration_step_size * differential_E[node] + sqrt(*::wilson_integration_step_size) * noises_array[node]) / *::wilson_tau_e;
+            activity_I[node] = ::wilson_i_values[node] + (*::wilson_integration_step_size * differential_I[node] + sqrt(*::wilson_integration_step_size) * noises_array[node]) / *::wilson_tau_i;
 
-            // printf("-- Heun's 1: Node %d - Update output_e value --\n", node);
-            output_e[node * (*number_of_integration_steps + 1) + step] = activity_E[node];
+            // printf("-- Heun's 1: Node %d - Update ::wilson_output_e value --\n", node);
+            ::wilson_output_e[node * (*::wilson_number_of_integration_steps + 1) + step] = activity_E[node];
         }
 
         // printf("-- Heun's Method - Step 2 --\n");
         // ------------ Heun's Method - Step 2
-        for(int node = 0; node < *number_of_oscillators; node++)
+        for(int node = 0; node < *::wilson_number_of_oscillators; node++)
         {   
             // printf("-- Heun's 2: Node %d --\n", node);
             // Initialize input to node as 0
@@ -1150,29 +1165,29 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
 
             // ------------ Calculate input to node
             // Consider all other nodes, but only if the lower delay index is lower than the time point
-            for (int other_node = 0; other_node < *number_of_oscillators; other_node++)
+            for (int other_node = 0; other_node < *::wilson_number_of_oscillators; other_node++)
             {   
                 // printf("-- Heun's 2: Node %d - Other node %d --\n", node, other_node);
-                if (step > lower_idxs_mat[node * *number_of_oscillators + other_node])
+                if (step > ::wilson_lower_idxs_mat[node * *::wilson_number_of_oscillators + other_node])
                 {   
                     // printf("Step > lowerIdx");
                     // Retrieve the difference between the 'true' delay and the one corresponding to the upper index
-                    *delay_difference = delay_mat[node * *number_of_oscillators + other_node];
-                    *delay_difference -= (double)upper_idxs_mat[node * *number_of_oscillators + other_node] * *integration_step_size;
+                    *delay_difference = ::wilson_delay_mat[node * *::wilson_number_of_oscillators + other_node];
+                    *delay_difference -= (double)::wilson_upper_idxs_mat[node * *::wilson_number_of_oscillators + other_node] * *::wilson_integration_step_size;
 
                     // Retrieve the time point indices corresponding with the lower and upper delay indices
-                    *index_lower = step - lower_idxs_mat[node * *number_of_oscillators + other_node];
-                    *index_upper = step - upper_idxs_mat[node * *number_of_oscillators + other_node];
+                    *index_lower = step - ::wilson_lower_idxs_mat[node * *::wilson_number_of_oscillators + other_node];
+                    *index_upper = step - ::wilson_upper_idxs_mat[node * *::wilson_number_of_oscillators + other_node];
 
                     // Retrieve the activities corresponding to the lower and upper delay indices
-                    *input_lower = output_e[other_node * (*number_of_integration_steps + 1) + *index_lower];
-                    *input_upper = output_e[other_node * (*number_of_integration_steps + 1) + *index_upper];
+                    *input_lower = ::wilson_output_e[other_node * (*::wilson_number_of_integration_steps + 1) + *index_lower];
+                    *input_upper = ::wilson_output_e[other_node * (*::wilson_number_of_integration_steps + 1) + *index_upper];
 
                     // From the previously retrieved values, estimate the input to oscillator k from oscillator j
                     *input_final = *input_upper;
-                    *input_final += (*input_lower - *input_upper) / *integration_step_size * *delay_difference;
+                    *input_final += (*input_lower - *input_upper) / *::wilson_integration_step_size * *delay_difference;
                     // From this estimation, determine the quantile, final input
-                    *input_final *= coupling_mat[node * *number_of_oscillators + other_node];
+                    *input_final *= ::wilson_coupling_mat[node * *::wilson_number_of_oscillators + other_node];
                     // Add this to the total input to oscillator k
                     *node_input += *input_final;
                 }
@@ -1181,66 +1196,40 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
             // printf("-- Heun's 2: Node %d - Differential Equations --\n", node);
             // ------------ Calculate Equations
             // Excitatory population (without noise and time) differentials
-            differential_E2[node] = *node_input - *c_ei * activity_I[node] + *external_e;
-            differential_E2[node] = -activity_E[node] + (1 - *r_e * activity_E[node]) * wilson_response_function(differential_E2[node], *alpha_e, *theta_e);
+            differential_E2[node] = *node_input - *::wilson_c_ei * activity_I[node] + *::wilson_external_e;
+            differential_E2[node] = -activity_E[node] + (1 - *::wilson_r_e * activity_E[node]) * wilson_response_function(differential_E2[node], *::wilson_alpha_e, *::wilson_theta_e);
 
             // Inhibitory population (without noise and time) differentials
-            differential_I2[node] = *c_ie * activity_E[node];
-            differential_I2[node] = -activity_I[node] + (1 - *r_i * activity_I[node]) * wilson_response_function(differential_I2[node], *alpha_i, *theta_i);
+            differential_I2[node] = *::wilson_c_ie * activity_E[node];
+            differential_I2[node] = -activity_I[node] + (1 - *::wilson_r_i * activity_I[node]) * wilson_response_function(differential_I2[node], *::wilson_alpha_i, *::wilson_theta_i);
 
             // Second estimate of the new activity values
-            e_values[node] += (*integration_step_size / 2 * (differential_E[node] + differential_E2[node]) + sqrt(*integration_step_size) * noises_array[node]) / *tau_e;
-            i_values[node] += (*integration_step_size / 2 * (differential_I[node] + differential_I2[node]) + sqrt(*integration_step_size) * noises_array[node]) / *tau_i;
+            ::wilson_e_values[node] += (*::wilson_integration_step_size / 2 * (differential_E[node] + differential_E2[node]) + sqrt(*::wilson_integration_step_size) * noises_array[node]) / *::wilson_tau_e;
+            ::wilson_i_values[node] += (*::wilson_integration_step_size / 2 * (differential_I[node] + differential_I2[node]) + sqrt(*::wilson_integration_step_size) * noises_array[node]) / *::wilson_tau_i;
 
-            // printf("-- Heun's 2: Node %d - Calculate output_e values --\n", node);
-            output_e[node * (*number_of_integration_steps + 1) + step] = e_values[node];
+            // printf("-- Heun's 2: Node %d - Calculate ::wilson_output_e values --\n", node);
+            ::wilson_output_e[node * (*::wilson_number_of_integration_steps + 1) + step] = ::wilson_e_values[node];
         }
     }
 
     // ------------- Convert output variables to Python types
     printf("---- Converting output variables to Python types ----\n");
-    for (int i = 0; i < *number_of_oscillators; i++)
+    for (int i = 0; i < *::wilson_number_of_oscillators; i++)
     {
-        for (int step = 0; step <= *number_of_integration_steps; step++)
+        for (int step = 0; step <= *::wilson_number_of_integration_steps; step++)
         {
-            temp_variable = PyFloat_FromDouble(output_e[i * (*number_of_integration_steps + 1) + step]);
-            PyArray_SETITEM(electrical_activity, PyArray_GETPTR2(electrical_activity, i, step), temp_variable);
+            temp_variable = PyFloat_FromDouble(::wilson_output_e[i * (*::wilson_number_of_integration_steps + 1) + step]);
+            PyArray_SETITEM(::wilson_electrical_activity, PyArray_GETPTR2(::wilson_electrical_activity, i, step), temp_variable);
             // Decrease reference for next
             Py_DECREF(temp_variable);
         }
     }
 
-    printf("---- Free memory ----\n");
-    // ------------- Free memory
-    // Delete input variables
-    delete number_of_oscillators;
-    delete c_ee;
-    delete c_ei;
-    delete c_ie;
-    delete c_ii;
-    delete tau_e;
-    delete tau_i;
-    delete r_e;
-    delete r_i;
-    delete alpha_e;
-    delete alpha_i;
-    delete theta_e;
-    delete theta_i;
-    delete external_e;
-    delete external_i;
-    delete number_of_integration_steps;
-    delete integration_step_size;
-    delete noise_type;
-    delete noise_amplitude;
+    // ------------- Check that the output has the correct shape and type
+    // printf("---- Check output variables ----\n");
+    // check_type((boost::any)::wilson_electrical_activity, "struct __object * __ptr64", "wilson_electrical_activity");
 
-    // Delete helper variables
-    delete[] e_values;
-    delete[] i_values;
-    delete[] coupling_mat;
-    delete[] delay_mat;
-    delete[] lower_idxs_mat;
-    delete[] upper_idxs_mat;
-    delete[] output_e;
+    printf("---- Free memory ----\n");
 
     // Delete single-value helper variables
     delete temp_long;
@@ -1264,25 +1253,33 @@ double wilson_objective(unsigned int input_dim, const double *initial_query, dou
     delete[] noises_array;
 
     // ------------- Return output variables
-    printf("---- Shape of electrical activity: %d ----\n", PyArray_NDIM(electrical_activity));
-    return electrical_activity;
+    printf("---- Shape of electrical activity: %d ----\n", PyArray_NDIM(::wilson_electrical_activity));
+    printf("electrical_activity: ", ::wilson_electrical_activity);
+    // return ::wilson_electrical_activity;
 
+    return 1;
 }
 
 // Function that wraps these functions into methods of a module
 static PyMethodDef IntegrationMethods[] = {
-    { // Wilson model
-        "wilson_model",
-        wilson_model,
-        METH_VARARGS,
-        "Solves the Wilson-Cowan model equations, and returns electrical activity"
-    },
     { // BOLD model
         "electrical_to_bold",
         electrical_to_bold,
         METH_VARARGS,
         "Solves the BOLD model equations, and returns BOLD activity"
     },
+    {
+        "wilson_model",
+        parsing_wilson_inputs,
+        METH_VARARGS,
+        "Solves the Wilson-Cowan model equations, and returns electrical activity"
+    },
+    // { // Wilson model
+    //     "wilson_model",
+    //     wilson_model,
+    //     METH_VARARGS,
+    //     "Solves the Wilson-Cowan model equations, and returns electrical activity"
+    // },
     { // Sentinel to properly exit function
         NULL, NULL, 0, NULL
     }

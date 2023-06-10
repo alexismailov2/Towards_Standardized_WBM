@@ -5,7 +5,13 @@ import numpy
 simulation_mod = Extension('simulations',
                               sources = ['simulation_main.cpp'],
                               language="c++",
-                              include_dirs=[numpy.get_include()]
+                              include_dirs=[numpy.get_include(),
+                              "C:\\Users\\shahi\\AppData\\Local\\Programs\\Python\\Python311\\Lib\\site-packages\\numpy\\core\\include",
+                              "C:\\cpp_libs\\include",
+                              "C:\\cpp_libs\\include\\bayesopt\\include",
+                              "C:\\src\\vcpkg\\installed\\x64-windows\\include",
+                              "C:\\src\\vcpkg\\installed\\x86-windows\\include"
+                              ]
                             )
 
 # The main setup command
