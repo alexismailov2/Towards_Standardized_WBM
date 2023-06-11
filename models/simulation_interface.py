@@ -204,9 +204,11 @@ def wilson_electrical_sim(args):
     R_mean, R_std = determine_order_R(simulation_results, number_oscillators, int(1 / integration_step_size))
 
     # --------- Calculate FC
-    sim_bold = process_BOLD(sim_bold)
+    # sim_bold = process_BOLD(sim_bold)
     sim_FC = np.corrcoef(sim_bold)
     np.fill_diagonal(sim_FC, 0.0)
+    np.savetxt('bold.csv', sim_bold, fmt="% .4f", delimiter=",")
+    np.savetxt('sim_FC.csv', sim_FC, fmt="% .8f", delimiter=",")
 
     # Check the same of the simulated FC matrix
     check_shape(sim_FC, (number_oscillators, number_oscillators), 'sim_FC')
@@ -251,6 +253,19 @@ def wilson_electrical_sim(args):
     np.savetxt(FC_path, sim_FC, fmt="% .8f", delimiter=",")
     np.savetxt(R_path, np.array([R_mean, R_std]), delimiter=",")
     np.savetxt(empFC_simFC_corr_path, np.array([empFC_simFC_corr]), delimiter=",")
+
+    # Save the plots
+    plt.figure()
+    print('sim_bold shape is', sim_bold.shape)
+    # print('After expand dims, the first is dim', np.expand_dims(sim_bold[0, :], axis=0).shape)
+    plt.imshow(np.expand_dims(sim_bold[0, :], axis=0))
+    # cmap
+    plt.set_cmap('jet')
+    plt.savefig(os.path.join(bold_path_main, "bold.png"))
+
+    plt.figure()
+    plt.imshow(sim_FC)
+    plt.savefig(os.path.join(FC_path_main, "FC.png"))
     
     # --------- Return the results
     # Create dictionary of results

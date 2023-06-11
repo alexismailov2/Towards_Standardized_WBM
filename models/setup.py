@@ -10,7 +10,8 @@ simulation_mod = Extension('simulations',
                               "C:\\cpp_libs\\include",
                               "C:\\cpp_libs\\include\\bayesopt\\include",
                               "C:\\src\\vcpkg\\installed\\x64-windows\\include",
-                              "C:\\src\\vcpkg\\installed\\x86-windows\\include"
+                              "C:\\src\\vcpkg\\installed\\x86-windows\\include",
+                              "C:\\cpp_libs\\include\\filtering\\Butterworth-Filter_likeMatlabfromGithub\\include"
                               ]
                             )
 
