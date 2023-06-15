@@ -19,9 +19,9 @@ target_include_directories(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${DEPENDENCIES_PREFIX_PATH}/bayesopt/include
-        ${GSL_INCLUDE_DIRS}
+        #${GSL_INCLUDE_DIRS}
         ${Boost_INCLUDE_DIRS}
-        ${GSL_INCLUDE_DIRECTORIES}
+        #${GSL_INCLUDE_DIRECTORIES}
         ${CMAKE_CURRENT_LIST_DIR})
 
 # Private or public but in case it will be used outside of this cmake it will need all dependencies.
@@ -29,8 +29,8 @@ target_link_libraries(${PROJECT_NAME}
         PRIVATE
         -L${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib
         libbayesopt.a
-        libnlopt.a
-        ${GSL_LIBRARIES})
+        libnlopt.a)
+        #${GSL_LIBRARIES})
 
 # Set all needed public headers to be delivered to installation path
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADERS "${${PROJECT_NAME}_PUBLIC_HEADERS}")

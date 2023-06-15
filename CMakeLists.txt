@@ -27,7 +27,7 @@ list(APPEND DEPENDENCIES_LIST bayesopt_external)
 #set(GSL_ROOT ${DEPENDENCIES_PREFIX_PATH}/gsl)
 #list(APPEND DEPENDENCIES_LIST gsl_external)
 
-find_package(gsl REQUIRED)
+#find_package(gsl REQUIRED)
 find_package(Boost REQUIRED)
 
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/libbayesopt.a")

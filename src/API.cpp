@@ -2,7 +2,8 @@
 
 #include "simulation_helpers.hpp"
 
-#include <gsl/gsl_statistics.h>
+// TODO: Only one function used reduce huge dependency
+//#include <gsl/gsl_statistics.h>
 
 #include <bayesopt/bayesopt.hpp>
 #include <bayesopt/bayesopt.h>
@@ -10,6 +11,19 @@
 #include <cmath>
 
 namespace {
+
+double gsl_stats_mean(const double data[], const size_t stride, const size_t size)
+{
+  /* Compute the arithmetic mean of a dataset using the recurrence relation
+     mean_(n) = mean(n-1) + (data[n] - mean(n-1))/(n+1)   */
+
+  long double mean = 0;
+  for (auto i = 0; i < size; i++)
+  {
+    mean += (data[i * stride] - mean) / (i + 1);
+  }
+  return mean;
+}
 
 /**
  * Saving bold to file.
