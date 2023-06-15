@@ -1,0 +1,24 @@
+"""Setup file for uhd module"""
+
+from setuptools import setup
+
+setup(name='pyWilsonSimulation',
+      version='1.0.0',
+      description='Simulation models and temporal integration for the Wilson Cowan model',
+      classifiers=[
+          'Development Status :: 0 - Alpha',
+          'License :: Wilson :: Commercial',
+          'Programming Language :: C++',
+          'Programming Language :: Python',
+          'Topic :: System',
+      ],
+      keywords='WilsonSimulation',
+      author='Ismailov Oleksandr',
+      author_email='tama.rilla@protonmail.com',
+      url='https://github.com/alexismailov2',
+      license='Commercial',
+      package_dir={'': '${CMAKE_CURRENT_SOURCE_DIR}/python'},
+      package_data={'pyWilsonSimulation': ['*.so']},
+      zip_safe=False,
+      packages=['pyWilsonSimulation'],
+      install_requires=['numpy'])
