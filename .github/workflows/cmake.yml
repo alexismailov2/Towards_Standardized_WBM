@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Preinstall
-        run: brew install gsl boost python swig
+        run: brew install gsl boost python3 swig
 
       - name: Submodules update
         run: git submodule update --init --recursive
