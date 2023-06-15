@@ -21,7 +21,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Preinstall
-        run: sudo apt update -y && sudo apt upgrade -y && sudo add-apt-repository ppa:deadsnakes/ppa -y && sudo apt install -y libgsl-dev libboost-all-dev python3.9
+        run: sudo apt update -y && sudo apt upgrade -y && sudo add-apt-repository ppa:deadsnakes/ppa -y && sudo apt install -y libgsl-dev libboost-all-dev python3.9 swig
 
       - name: Submodules update
         run: git submodule update --init --recursive
@@ -63,7 +63,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Preinstall
-        run: brew install gsl boost python
+        run: brew install gsl boost python swig
 
       - name: Submodules update
         run: git submodule update --init --recursive
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Preinstall
-        run: git clone https://github.com/Microsoft/vcpkg.git && .\vcpkg\bootstrap-vcpkg.bat
+        run: git clone https://github.com/Microsoft/vcpkg.git && .\vcpkg\bootstrap-vcpkg.bat && .\vcpkg\vcpkg integrate install && .\vcpkg\install boost
 
       - name: Submodules update
         run: git submodule update --init --recursive
