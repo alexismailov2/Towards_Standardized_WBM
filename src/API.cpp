@@ -5,6 +5,7 @@
 // TODO: Only one function used reduce huge dependency
 //#include <gsl/gsl_statistics.h>
 
+#include <boost/throw_exception.hpp>
 #include <bayesopt/bayesopt.hpp>
 #include <bayesopt/bayesopt.h>
 
