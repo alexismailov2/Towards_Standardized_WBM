@@ -31,7 +31,7 @@ list(APPEND DEPENDENCIES_LIST bayesopt_external)
 #set(GSL_ROOT ${DEPENDENCIES_PREFIX_PATH}/gsl)
 #list(APPEND DEPENDENCIES_LIST gsl_external)
 
-if (WINDOWS)
+if (MSVC)
 ExternalProject_Add(swig_external
         PREFIX ${DEPENDENCIES_PREFIX_PATH}/swig-tmp
         SVN_REPOSITORY "https://swig.svn.sourceforge.net/svnroot/swig/trunk"
@@ -44,7 +44,7 @@ endif()
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
 
-if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/libbayesopt.${CMAKE_STATIC_LIBRARY_SUFFIX}")
+if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt.${CMAKE_STATIC_LIBRARY_SUFFIX}")
     return()
 endif()
 
