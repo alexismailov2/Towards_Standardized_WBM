@@ -60,10 +60,8 @@ if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_
             -DCMAKE_BUILD_TYPE=Release
             -DHAVE_GETTIMEOFDAY=OFF
             -DBAYESOPT_BUILD_EXAMPLES=OFF
-            -DBOOST_EXCEPTION_DISABLE=ON
-            -DBOOST_ROOT=${BOOST_ROOT}
-            -DBOOSTROOT=${BOOST_ROOT}
-            -DCMAKE_CXX_FLAGS="-std=c++11")
+            -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
+            -DCMAKE_CXX_FLAGS="-std=c++11 -DBOOST_EXCEPTION_DISABLE")
     set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
     list(APPEND DEPENDENCIES_LIST bayesopt_external)
 endif()
