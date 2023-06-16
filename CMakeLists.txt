@@ -29,6 +29,19 @@ list(APPEND DEPENDENCIES_LIST bayesopt_external)
 #set(GSL_ROOT ${DEPENDENCIES_PREFIX_PATH}/gsl)
 #list(APPEND DEPENDENCIES_LIST gsl_external)
 
+if (WINDOWS)
+ExternalProject_Add(swig_external
+        PREFIX ${DEPENDENCIES_PREFIX_PATH}/swig-tmp
+        SVN_REPOSITORY "https://swig.svn.sourceforge.net/svnroot/swig/trunk"
+        BUILD_IN_SOURCE 1
+        CONFIGURE_COMMAND "./autogen.sh && ./configure"
+        BUILD_COMMAND "make"
+        INSTALL_COMMAND "")
+endif()
+
+set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
+list(APPEND DEPENDENCIES_LIST bayesopt_external)
+
 #find_package(gsl REQUIRED)
 find_package(Boost REQUIRED)
 
