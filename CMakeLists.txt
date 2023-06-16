@@ -68,6 +68,10 @@ endif()
 message(STATUS DEPENDENCIES_LIST="${DEPENDENCIES_LIST}")
 add_custom_target(dependencies DEPENDS ${DEPENDENCIES_LIST})
 
+if (MSVC)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc")
+endif()
+
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
   return()
 endif()
