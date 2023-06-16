@@ -21,12 +21,19 @@ target_include_directories(${PROJECT_NAME}
         ${DEPENDENCIES_PREFIX_PATH}/bayesopt/include
         ${Boost_INCLUDE_DIR})
 
+if(MSVC) # again windows with its focuses
 # Private or public but in case it will be used outside of this cmake it will need all dependencies.
-target_link_libraries(${PROJECT_NAME}
-        PRIVATE
-        -L${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib
-        ${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}
-        ${CMAKE_STATIC_LIBRARY_PREFIX}nlopt${CMAKE_STATIC_LIBRARY_SUFFIX})
+    target_link_libraries(${PROJECT_NAME}
+            PRIVATE
+            ${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}nlopt${CMAKE_STATIC_LIBRARY_SUFFIX})
+else()
+    target_link_libraries(${PROJECT_NAME}
+            PRIVATE
+            -L${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib
+            ${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}
+            ${CMAKE_STATIC_LIBRARY_PREFIX}nlopt${CMAKE_STATIC_LIBRARY_SUFFIX})
+endif()
 
 # Set all needed public headers to be delivered to installation path
 set_target_properties(${PROJECT_NAME} PROPERTIES PUBLIC_HEADERS "${${PROJECT_NAME}_PUBLIC_HEADERS}")
