@@ -40,6 +40,7 @@ if (MSVC)
         if ("${BOOST_ROOT}" STREQUAL "")
             set(BOOST_ROOT ${DEPENDENCIES_PREFIX_PATH}/boost)
         endif()
+        message(STATUS "BOOST_ROOT=${BOOST_ROOT}")
         find_package(Boost REQUIRED)
     endif()
 
