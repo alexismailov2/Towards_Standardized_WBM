@@ -9,28 +9,46 @@ include(ExternalProject)
 set(DEPENDENCIES_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
 
 if (MSVC)
-    # TODO: fu**ing windows
-    #ExternalProject_Add(swig_external
-    #        PREFIX ${DEPENDENCIES_PREFIX_PATH}/swig-tmp
-    #        SVN_REPOSITORY "https://swig.svn.sourceforge.net/svnroot/swig/trunk"
-    #        BUILD_IN_SOURCE 1
-    #        CONFIGURE_COMMAND "./autogen.sh && ./configure"
-    #        BUILD_COMMAND "make"
-    #        INSTALL_COMMAND "")
     if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/swig.exe")
         execute_process(COMMAND unzip.exe ${CMAKE_CURRENT_LIST_DIR}/swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
     endif()
     set(SWIG_DIR "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/Lib")
     set(SWIG_EXECUTABLE "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/swig.exe")
 
-    if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip")
-        set(BOOST_URL https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.zip)
-        file(DOWNLOAD ${BOOST_URL} ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip SHOW_PROGRESS)
-        execute_process(COMMAND unzip.exe ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+# TODO: it should be build anyway so it is not applicable
+#    if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip")
+#        set(BOOST_URL https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.zip)
+#        file(DOWNLOAD ${BOOST_URL} ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip SHOW_PROGRESS)
+#        execute_process(COMMAND unzip.exe ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+#    endif()
+
+    if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/boost")
+        message(STATUS "NOT EXISTS DIRECTORY")
+        set(BOOST_URL "https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.zip")
+
+        ExternalProject_Add(external_boost
+                PREFIX ${DEPENDENCIES_PREFIX_PATH}/boost-tmp
+                URL ${BOOST_URL}
+                BUILD_IN_SOURCE 1
+                CONFIGURE_COMMAND ./bootstrap.bat
+                --with-libraries=filesystem
+                --with-libraries=system
+                --with-libraries=date_time
+                --with-libraries=test
+                link=shared
+                variant=release
+                threading=multi
+                runtime-link=static
+                --prefix=<INSTALL_DIR>
+                BUILD_COMMAND
+                ${BOOST_BUILD_COMMAND} install
+                INSTALL_COMMAND ""
+                INSTALL_DIR ${DEPENDENCIES_PREFIX_PATH}/boost)
+        list(APPEND DEPENDENCIES_LIST external_boost)
     endif()
 
     if ("${Boost_INCLUDE_DIR}" STREQUAL "")
-        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0)
+        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost/include)
     endif()
     message(STATUS "Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 else()
@@ -38,32 +56,25 @@ else()
 endif()
 
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
-ExternalProject_Add(bayesopt_external
-        PREFIX ${DEPENDENCIES_PREFIX_PATH}/bayesopt-tmp
-        GIT_REPOSITORY "https://github.com/rmcantin/bayesopt.git"
-        CMAKE_ARGS
-        -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_PREFIX_PATH}/bayesopt
-        -DCMAKE_BUILD_TYPE=Release
-        -DHAVE_GETTIMEOFDAY=OFF
-        -DBAYESOPT_BUILD_EXAMPLES=OFF
-        -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
-        -DCMAKE_CXX_FLAGS="-std=c++11")
-set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
-list(APPEND DEPENDENCIES_LIST bayesopt_external)
+    ExternalProject_Add(bayesopt_external
+            PREFIX ${DEPENDENCIES_PREFIX_PATH}/bayesopt-tmp
+            GIT_REPOSITORY "https://github.com/rmcantin/bayesopt.git"
+            CMAKE_ARGS
+            -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_PREFIX_PATH}/bayesopt
+            -DCMAKE_BUILD_TYPE=Release
+            -DHAVE_GETTIMEOFDAY=OFF
+            -DBAYESOPT_BUILD_EXAMPLES=OFF
+            -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
+            -DCMAKE_CXX_FLAGS="-std=c++11")
+    set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
+    list(APPEND DEPENDENCIES_LIST bayesopt_external)
 endif()
 
-# TODO: Does not work on MacOS I do not know what is the problem
-#ExternalProject_Add(gsl
-#        PREFIX ${DEPENDENCIES_PREFIX_PATH}/gsl-tmp
-#        GIT_REPOSITORY "https://github.com/LuaDist/gsl.git")
-#        #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=${DEPENDENCIES_PREFIX_PATH}/gsl -DCMAKE_INCLUDE_DIRECTORIES=${DEPENDENCIES_PREFIX_PATH}/gsl-tmp/src -DCMAKE_BUILD_TYPE=Release)
-#set(GSL_ROOT ${DEPENDENCIES_PREFIX_PATH}/gsl)
-#list(APPEND DEPENDENCIES_LIST gsl_external)
-
-list(APPEND DEPENDENCIES_LIST bayesopt_external)
+message(STATUS DEPENDENCIES_LIST="${DEPENDENCIES_LIST}")
+add_custom_target(dependencies DEPENDS ${DEPENDENCIES_LIST})
 
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
-    return()
+  return()
 endif()
 
 add_subdirectory(src)
