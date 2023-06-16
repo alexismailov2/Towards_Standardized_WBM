@@ -20,6 +20,7 @@ if (MSVC)
     if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/swig.exe")
         execute_process(COMMAND unzip.exe ${CMAKE_CURRENT_LIST_DIR}/swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
     endif()
+    set(SWIG_DIR "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1")
 
     if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip")
         set(BOOST_URL https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.zip)
