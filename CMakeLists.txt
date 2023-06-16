@@ -36,6 +36,7 @@ else()
     find_package(Boost REQUIRED)
 endif()
 
+if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
 ExternalProject_Add(bayesopt_external
         PREFIX ${DEPENDENCIES_PREFIX_PATH}/bayesopt-tmp
         GIT_REPOSITORY "https://github.com/rmcantin/bayesopt.git"
@@ -48,6 +49,7 @@ ExternalProject_Add(bayesopt_external
         -DCMAKE_CXX_FLAGS="-std=c++11")
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
+endif()
 
 # TODO: Does not work on MacOS I do not know what is the problem
 #ExternalProject_Add(gsl
@@ -57,7 +59,6 @@ list(APPEND DEPENDENCIES_LIST bayesopt_external)
 #set(GSL_ROOT ${DEPENDENCIES_PREFIX_PATH}/gsl)
 #list(APPEND DEPENDENCIES_LIST gsl_external)
 
-set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
 
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -138,7 +139,5 @@ add_dependencies(${PROJECT_NAME}_copy ${PROJECT_NAME})
 add_custom_target(install-python
         DEPENDS ${PROJECT_NAME}_copy
         COMMAND python3 ${CMAKE_CURRENT_BINARY_DIR}/setup.py bdist_wheel)
-
-add_dependencies(${PROJECT_NAME} ${DEPENDENCIES_LIST})
 
 add_subdirectory(tests)
