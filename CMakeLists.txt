@@ -30,7 +30,7 @@ if (MSVC)
     endif()
 
     if ("${Boost_INCLUDE_DIR}" STREQUAL "")
-        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0/boost)
+        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0)
     endif()
     message(STATUS "Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
 else()
