@@ -32,13 +32,16 @@ list(APPEND DEPENDENCIES_LIST bayesopt_external)
 #list(APPEND DEPENDENCIES_LIST gsl_external)
 
 if (MSVC)
-ExternalProject_Add(swig_external
-        PREFIX ${DEPENDENCIES_PREFIX_PATH}/swig-tmp
-        SVN_REPOSITORY "https://swig.svn.sourceforge.net/svnroot/swig/trunk"
-        BUILD_IN_SOURCE 1
-        CONFIGURE_COMMAND "./autogen.sh && ./configure"
-        BUILD_COMMAND "make"
-        INSTALL_COMMAND "")
+# TODO: fu**ing windows
+#ExternalProject_Add(swig_external
+#        PREFIX ${DEPENDENCIES_PREFIX_PATH}/swig-tmp
+#        SVN_REPOSITORY "https://swig.svn.sourceforge.net/svnroot/swig/trunk"
+#        BUILD_IN_SOURCE 1
+#        CONFIGURE_COMMAND "./autogen.sh && ./configure"
+#        BUILD_COMMAND "make"
+#        INSTALL_COMMAND "")
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xzf swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
 endif()
 
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
