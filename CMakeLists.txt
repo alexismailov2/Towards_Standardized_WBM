@@ -37,12 +37,12 @@ if (MSVC)
         list(APPEND DEPENDENCIES_LIST external_boost)
         return() # main dependency nothing should be done before ths will be resolved
     else()
+        if ("${BOOST_ROOT}" STREQUAL "")
+            set(BOOST_ROOT ${DEPENDENCIES_PREFIX_PATH}/boost)
+        endif()
         find_package(Boost REQUIRED)
     endif()
 
-    #if ("${Boost_INCLUDE_DIR}" STREQUAL "")
-    #    set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost/include/boost-1_82)
-    #endif()
     message(STATUS "Boost_INCLUDE_DIR=${Boost_INCLUDE_DIR}")
     message(STATUS "Boost_LIBRARIES=${Boost_LIBRARIES}")
     message(STATUS "Boost_LIBS=${Boost_LIBS}")
@@ -59,7 +59,8 @@ if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_
             -DCMAKE_BUILD_TYPE=Release
             -DHAVE_GETTIMEOFDAY=OFF
             -DBAYESOPT_BUILD_EXAMPLES=OFF
-            -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
+            -DBOOST_EXCEPTION_DISABLE=ON
+            -DBOOST_ROOT=${BOOST_ROOT}
             -DCMAKE_CXX_FLAGS="-std=c++11")
     set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
     list(APPEND DEPENDENCIES_LIST bayesopt_external)
