@@ -43,11 +43,19 @@ if (MSVC)
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/swig.exe")
     execute_process(COMMAND unzip.exe ${CMAKE_CURRENT_LIST_DIR}/swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
 endif()
+
+if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip")
+    set(BOOST_URL https://boostorg.jfrog.io/artifactory/main/release/1.82.0/source/boost_1_82_0.zip)
+    file(DOWNLOAD ${BOOST_URL} ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip SHOW_PROGRESS)
+    execute_process(COMMAND unzip.exe ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+endif()
+
 endif()
 
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
 
+message(STATUS "CMAKE_STATIC_LIBRARY_SUFFIX=${CMAKE_STATIC_LIBRARY_SUFFIX}")
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt.${CMAKE_STATIC_LIBRARY_SUFFIX}")
     return()
 endif()
