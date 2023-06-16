@@ -41,7 +41,7 @@ if (MSVC)
                 runtime-link=static
                 --prefix=<INSTALL_DIR>
                 BUILD_COMMAND
-                ${BOOST_BUILD_COMMAND} install
+                ./b2.exe install
                 INSTALL_COMMAND ""
                 INSTALL_DIR ${DEPENDENCIES_PREFIX_PATH}/boost)
         list(APPEND DEPENDENCIES_LIST external_boost)
