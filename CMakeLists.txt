@@ -61,17 +61,13 @@ if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_
             -DHAVE_GETTIMEOFDAY=OFF
             -DBAYESOPT_BUILD_EXAMPLES=OFF
             -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
-            -DCMAKE_CXX_FLAGS="-std=c++11 -DBOOST_EXCEPTION_DISABLE")
+            -DCMAKE_CXX_FLAGS="-std=c++11")
     set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
     list(APPEND DEPENDENCIES_LIST bayesopt_external)
 endif()
 
 message(STATUS DEPENDENCIES_LIST="${DEPENDENCIES_LIST}")
 add_custom_target(dependencies DEPENDS ${DEPENDENCIES_LIST})
-
-if (MSVC)
-    add_definitions(-DBOOST_EXCEPTION_DISABLE)
-endif()
 
 if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_PREFIX}bayesopt${CMAKE_STATIC_LIBRARY_SUFFIX}")
   return()
