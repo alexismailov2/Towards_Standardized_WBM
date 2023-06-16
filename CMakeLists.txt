@@ -148,7 +148,7 @@ add_custom_target(${PROJECT_NAME}_copy ALL
 add_dependencies(${PROJECT_NAME}_copy ${PROJECT_NAME})
 
 # Build target to call setup.py
-add_custom_target(install-python
+add_custom_target(install_python
         DEPENDS ${PROJECT_NAME}_copy
         COMMAND python3 ${CMAKE_CURRENT_BINARY_DIR}/setup.py bdist_wheel)
 
