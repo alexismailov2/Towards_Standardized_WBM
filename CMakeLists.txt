@@ -31,7 +31,7 @@ if (MSVC)
                 URL ${BOOST_URL}
                 BUILD_IN_SOURCE 1
                 CONFIGURE_COMMAND ./bootstrap.bat --with-libraries=system link=shared variant=release threading=multi runtime-link=static --prefix=<INSTALL_DIR>
-                BUILD_COMMAND ./b2.exe address-model=64 --with-libraries=system link=static variant=release threading=multi runtime-link=static install
+                BUILD_COMMAND ./b2.exe address-model=64 --with-system link=static variant=release threading=multi runtime-link=static install
                 INSTALL_COMMAND ""
                 INSTALL_DIR ${DEPENDENCIES_PREFIX_PATH}/boost)
         list(APPEND DEPENDENCIES_LIST external_boost)
