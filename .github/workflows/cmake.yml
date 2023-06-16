@@ -126,7 +126,7 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{env.BUILD_TYPE}} # --target install_python
 
       - name: Copy dist
-        run: #cp ${{github.workspace}}/build/dist/pyWilsonSimulation* ${{github.workspace}}/python
+        run: cp ${{github.workspace}}/build/dist/pyWilsonSimulation* ${{github.workspace}}/python
 
       - name: Upload pyWillsonSimulation
         uses: actions/upload-artifact@v3
