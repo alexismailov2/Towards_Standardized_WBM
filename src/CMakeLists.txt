@@ -19,7 +19,7 @@ target_include_directories(${PROJECT_NAME}
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ${DEPENDENCIES_PREFIX_PATH}/bayesopt/include
-        ${Boost_INCLUDE_DIRS})
+        ${Boost_INCLUDE_DIR})
 
 # Private or public but in case it will be used outside of this cmake it will need all dependencies.
 target_link_libraries(${PROJECT_NAME}
