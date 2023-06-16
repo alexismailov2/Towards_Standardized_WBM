@@ -5,11 +5,17 @@
 // TODO: Only one function used reduce huge dependency
 //#include <gsl/gsl_statistics.h>
 
-#include <boost/throw_exception.hpp>
 #include <bayesopt/bayesopt.hpp>
 #include <bayesopt/bayesopt.h>
 
 #include <cmath>
+
+// TODO: Dirty hack for f***ng windows MSVC
+namespace boost {
+  void throw_exception(std::exception const& e) {
+    return;
+  }
+}
 
 namespace {
 
