@@ -41,7 +41,7 @@ if (MSVC)
 #        BUILD_COMMAND "make"
 #        INSTALL_COMMAND "")
 
-execute_process(COMMAND unzip swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+execute_process(COMMAND unzip.exe swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
 endif()
 
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
