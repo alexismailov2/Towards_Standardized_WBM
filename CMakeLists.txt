@@ -5,6 +5,8 @@ set(CMAKE_CXX_STANDARD 14)
 
 include(ExternalProject)
 
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
 set(DEPENDENCIES_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
 
 ExternalProject_Add(bayesopt_external
