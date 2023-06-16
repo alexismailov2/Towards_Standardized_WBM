@@ -4,8 +4,6 @@ project(pyWilsonSimulation)
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-find_package(Boost REQUIRED)
-
 include(ExternalProject)
 
 set(DEPENDENCIES_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
@@ -32,6 +30,8 @@ if (MSVC)
     if ("${Boost_INCLUDE_DIR}" STREQUAL "")
         set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0)
     endif()
+else()
+    find_package(Boost REQUIRED)
 endif()
 
 ExternalProject_Add(bayesopt_external
