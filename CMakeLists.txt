@@ -40,8 +40,9 @@ if (MSVC)
 #        CONFIGURE_COMMAND "./autogen.sh && ./configure"
 #        BUILD_COMMAND "make"
 #        INSTALL_COMMAND "")
-
-execute_process(COMMAND unzip.exe ${CMAKE_CURRENT_LIST_DIR}/swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/swigwin-4.1.1/swig.exe")
+    execute_process(COMMAND unzip.exe ${CMAKE_CURRENT_LIST_DIR}/swigwin-4.1.1.zip WORKING_DIRECTORY ${DEPENDENCIES_PREFIX_PATH})
+endif()
 endif()
 
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
@@ -52,9 +53,6 @@ if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/${CMAKE_STATIC_LIBRARY_
 endif()
 
 add_subdirectory(src)
-
-#file(CREATE_LINK ${CMAKE_CURRENT_SOURCE_DIR}/WilsonSimulation/include/WilsonSimulation
-#        ${CMAKE_CURRENT_SOURCE_DIR}/src/interface/WilsonSimulation SYMBOLIC)
 
 set(CMAKE_SWIG_FLAGS)
 find_package(SWIG REQUIRED)
