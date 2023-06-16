@@ -2,10 +2,11 @@ cmake_minimum_required(VERSION 3.26)
 project(pyWilsonSimulation)
 
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+find_package(Boost REQUIRED)
 
 include(ExternalProject)
-
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 set(DEPENDENCIES_PREFIX_PATH "${CMAKE_CURRENT_LIST_DIR}/dependencies")
 
@@ -17,6 +18,7 @@ ExternalProject_Add(bayesopt_external
         -DCMAKE_BUILD_TYPE=Release
         -DHAVE_GETTIMEOFDAY=OFF
         -DBAYESOPT_BUILD_EXAMPLES=OFF
+        -DBoost_INCLUDE_DIR=${Boost_INCLUDE_DIR}
         -DCMAKE_CXX_FLAGS="-std=c++11")
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
@@ -42,10 +44,7 @@ endif()
 set(BAYESOPT_ROOT ${DEPENDENCIES_PREFIX_PATH}/bayesopt)
 list(APPEND DEPENDENCIES_LIST bayesopt_external)
 
-#find_package(gsl REQUIRED)
-find_package(Boost REQUIRED)
-
-if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/libbayesopt.a")
+if (NOT EXISTS "${DEPENDENCIES_PREFIX_PATH}/bayesopt/lib/libbayesopt.${CMAKE_STATIC_LIBRARY_SUFFIX}")
     return()
 endif()
 
