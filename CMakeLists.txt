@@ -30,7 +30,7 @@ if (MSVC)
     endif()
 
     if ("${Boost_INCLUDE_DIR}" STREQUAL "")
-        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0)
+        set(Boost_INCLUDE_DIR ${DEPENDENCIES_PREFIX_PATH}/boost_1_82_0/boost)
     endif()
 else()
     find_package(Boost REQUIRED)
