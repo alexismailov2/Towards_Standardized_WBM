@@ -147,9 +147,11 @@ add_custom_target(${PROJECT_NAME}_copy ALL
 
 add_dependencies(${PROJECT_NAME}_copy ${PROJECT_NAME})
 
+message(STATUS "Python_EXECUTABLE=${Python_EXECUTABLE}")
+
 # Build target to call setup.py
 add_custom_target(install_python
         DEPENDS ${PROJECT_NAME}_copy
-        COMMAND python3 ${CMAKE_CURRENT_BINARY_DIR}/setup.py bdist_wheel)
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/setup.py bdist_wheel)
 
 add_subdirectory(tests)
