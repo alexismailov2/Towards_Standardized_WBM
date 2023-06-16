@@ -10,12 +10,14 @@
 
 #include <cmath>
 
+#ifdef _MSC_VER
 // TODO: Dirty hack for f***ng windows MSVC
 namespace boost {
   void throw_exception(std::exception const& e) {
     return;
   }
 }
+#endif
 
 namespace {
 
